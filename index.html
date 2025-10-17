@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Табель учета рабочего времени</title>
+    <!-- ДОБАВЬТЕ В <head> -->
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // Ваша конфигурация - используйте ту, что вам дали!
+  const firebaseConfig = {
+    apiKey: "AIzaSyDqqblf0H9y1nmEkaTJpOxldlFIAyXy2oo",
+    authDomain: "tabel-4f2bc.firebaseapp.com",
+    projectId: "tabel-4f2bc",
+    storageBucket: "tabel-4f2bc.firebasestorage.app",
+    messagingSenderId: "1013653484911",
+    appId: "1:1013653484911:web:b1f2bc299e85f5b431e49a",
+    measurementId: "G-L3TBGHKV9D"
+  };
+
+  // Инициализация Firebase (совместимая версия)
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  
+  // Удалите analytics если не нужны (эта строка не обязательна)
+  // const analytics = firebase.analytics();
+</script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .organization-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .organization-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .department-name {
+            font-size: 1em;
+            color: #bdc3c7;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+
+        .sync-status {
+            background: #3498db;
+            color: white;
+            padding: 8px 15px;
+            text-align: center;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .sync-status.syncing {
+            background: #f39c12;
+        }
+
+        .sync-status.error {
+            background: #e74c3c;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .month-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .month-selector select, .month-selector input {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            min-width: 120px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            padding: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+            font-size: 0.8em;
+        }
+
+        th, td {
+            padding: 4px 3px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            min-width: 60px;
+        }
+
+        th {
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            font-size: 0.8em;
+        }
+
+        .day-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+        }
+
+        .day-number {
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .day-week {
+            font-size: 0.7em;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        .person-row {
+            background: #2c3e50 !important;
+        }
+
+        .person-name {
+            font-weight: 600;
+            color: white;
+            text-align: left;
+            min-width: 140px;
+            max-width: 140px;
+            position: sticky;
+            left: 0;
+            background: #2c3e50;
+            z-index: 2;
+            padding: 8px 10px;
+        }
+
+        .person-rate {
+            font-size: 0.75em;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .quick-input-btn {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.1);
+            color: #bdc3c7;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .quick-input-btn:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        input[type="number"] {
+            width: 35px;
+            padding: 3px 2px;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 3px rgba(52, 152, 219, 0.3);
+        }
+
+        .rate-input {
+            width: 80px;
+            padding: 4px 6px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8em;
+            background: #34495e;
+            color: white;
+            margin-top: 3px;
+            text-align: center;
+        }
+
+        .rate-input::placeholder {
+            color: #bdc3c7;
+        }
+
+        .shift-inputs {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day-input {
+            background: #f8f9fa;
+            padding: 2px;
+            border-radius: 3px;
+        }
+
+        .night-input {
+            background: #2c3e50;
+            color: white;
+            padding: 2px;
+            border-radius: 3px;
+        }
+
+        .night-input input {
+            background: #34495e;
+            color: white;
+            border-color: #4a6572;
+        }
+
+        .night-input input::placeholder {
+            color: #bdc3c7;
+        }
+
+        .weekend {
+            background-color: #c0c5aa !important;
+        }
+
+        .weekend .day-input {
+            background: #dce4bc;
+        }
+
+        .total-section {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+        }
+
+        .total-section h2 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .period-totals {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 768px) {
+            .period-totals {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+        }
+
+        .period {
+            background: #34495e;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .period h3 {
+            margin-bottom: 12px;
+            color: #3498db;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        .person-total {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            padding: 8px 0;
+            font-size: 0.9em;
+        }
+
+        /* Линия ПЕРЕД именем в итогах */
+        .person-total:not(:first-child) {
+            border-top: 1px solid #4a6572;
+            margin-top: 8px;
+            padding-top: 12px;
+        }
+
+        .shift-total {
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .person-stats-row {
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-top: 2px;
+            margin-left: 10px;
+        }
+
+        .actions {
+            padding: 15px;
+            text-align: center;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #27ae60, #219a52);
+        }
+
+        .reset-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+            z-index: 1000;
+        }
+
+        .reset-btn:hover {
+            opacity: 1;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        .input-section h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .quick-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .input-hint {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .examples {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .mobile-warning {
+            display: none;
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ffeaa7;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 480px) {
+            .mobile-warning {
+                display: block;
+            }
+            
+            .logo-container {
+                position: static;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+            
+            .organization-name {
+                font-size: 1.1em;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .header {
+                padding: 15px 10px;
+            }
+            
+            .controls {
+                padding: 10px;
+            }
+            
+            .month-selector {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .total-section {
+                margin: 5px;
+                padding: 10px;
+            }
+            
+            button {
+                padding: 8px 15px;
+                font-size: 13px;
+                min-width: 140px;
+            }
+            
+            .person-name {
+                min-width: 120px;
+                max-width: 120px;
+                font-size: 0.8em;
+                padding: 6px 8px;
+            }
+            
+            .reset-btn {
+                top: 10px;
+                right: 10px;
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+            
+            input[type="number"] {
+                width: 30px;
+                padding: 2px 1px;
+                font-size: 0.7em;
+            }
+            
+            .rate-input {
+                width: 70px;
+                font-size: 0.75em;
+            }
+        }
+
+        .table-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Убрать стрелочки в input number */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="reset-btn" onclick="resetData()">❌ Очистить табель</button>
+        <div class="header">
+            <div class="logo-container">
+                <img src="https://images.finder.work/sig/plain/s3:/finder/company/53333fb9d6d044159d01f7b07a1d8ab6.png" alt="Логотип" class="logo">
+                <div class="organization-info">
+                    <div class="organization-name">СоюзБезопасность</div>
+                    <div class="department-name">Отдел ПНР</div>
+                </div>
+            </div>
+            <h1>📊 Табель учета рабочего времени</h1>
+        </div>
+
+        <div class="sync-status" id="syncStatus" style="display: none;">
+            <span>🔄 Синхронизация...</span>
+        </div>
+
+        <div class="controls">
+            <div class="month-selector">
+                <select id="monthSelect">
+                    <option value="0">Январь</option>
+                    <option value="1">Февраль</option>
+                    <option value="2">Март</option>
+                    <option value="3">Апрель</option>
+                    <option value="4">Май</option>
+                    <option value="5">Июнь</option>
+                    <option value="6">Июль</option>
+                    <option value="7">Август</option>
+                    <option value="8">Сентябрь</option>
+                    <option value="9">Октябрь</option>
+                    <option value="10">Ноябрь</option>
+                    <option value="11">Декабрь</option>
+                </select>
+                <input type="number" id="yearInput" min="2020" max="2030" value="2024">
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="timesheet">
+                <thead>
+                    <tr>
+                        <th>Сотрудник / День</th>
+                        <!-- Дни месяца будут добавлены через JavaScript -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Строки сотрудников будут добавлены через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="total-section">
+            <h2>Итоги за период</h2>
+            <div class="period-totals">
+                <div class="period" id="firstPeriod">
+                    <h3>📅 Первая половина месяца (1-15)</h3>
+                    <!-- Итоги будут добавлены через JavaScript -->
+                </div>
+                <div class="period" id="secondPeriod">
+                    <h3>📅 Вторая половина месяца (16-31)</h3>
+                    <!-- Итоги будут добавлены через JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="save-btn" onclick="saveAllData()">💾 Сохранить все изменения</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно для быстрого ввода -->
+    <div class="modal" id="quickInputModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalEmployeeName">Быстрый ввод</div>
+                <button class="close-modal" onclick="closeQuickInputModal()">×</button>
+            </div>
+            
+            <div class="input-section">
+                <h4>Первая половина месяца (1-15)</h4>
+                <div class="input-hint">
+                    Форматы: "8" - день, "н8" - ночь, "8н4" - день и ночь<br>
+                    Пробел - следующий день
+                </div>
+                <input type="text" class="quick-input" id="firstHalfInput" placeholder="8 8 н6 8н4">
+                <div class="examples">
+                    Примеры: "8 8" = 2 дня по 8ч, "н6 н8" = 2 ночи по 6ч и 8ч, "8н4 0н8" = день1: 8д/4н, день2: 0д/8н
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <h4>Вторая половина месяца (16-31)</h4>
+                <input type="text" class="quick-input" id="secondHalfInput" placeholder="8 8 н6 8н4">
+            </div>
+            
+            <div class="modal-actions">
+                <button class="save-btn" onclick="applyQuickInput()">Применить</button>
+                <button class="cancel-btn" onclick="closeQuickInputModal()">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Данные сотрудников
+        const employees = [
+            { name: "Карасев Игорь", rate: 750 },
+            { name: "Беженуца Ян", rate: 720 },
+            { name: "Александров Дмитрий", rate: 730 },
+            { name: "Павел Шаль", rate: 700 },
+            { name: "Афанасьев Алексей", rate: 700 },
+            { name: "Карасев Андрей", rate: 700 },
+            { name: "Селиванов Дмитрий", rate: 650 },
+        ];
+
+        let currentData = {};
+        let currentMonth, currentYear;
+        let autoSaveTimeout;
+        let isOnline = false;
+        let currentEmployeeIndex = null;
+
+        // Названия дней недели
+        const weekDays = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+        // Инициализация
+        async function init() {
+            const now = new Date();
+            currentMonth = now.getMonth();
+            currentYear = now.getFullYear();
+            
+            document.getElementById('monthSelect').value = currentMonth;
+            document.getElementById('yearInput').value = currentYear;
+            
+            await loadDataFromServer();
+            generateCalendar();
+            updateTotals();
+        }
+
+        // Функция для парсинга быстрого ввода
+        function parseQuickInput(input, startDay, empIndex) {
+            const tokens = input.trim().split(/\s+/);
+            let dayCounter = startDay;
+            
+            tokens.forEach(token => {
+                if (token && dayCounter <= new Date(currentYear, currentMonth + 1, 0).getDate()) {
+                    let dayHours = 0;
+                    let nightHours = 0;
+                    
+                    // Обрабатываем форматы: "8", "н8", "8н4"
+                    if (token.startsWith('н')) {
+                        // Ночная смена: "н8"
+                        nightHours = parseInt(token.substring(1)) || 0;
+                    } else if (token.includes('н')) {
+                        // День и ночь: "8н4"
+                        const parts = token.split('н');
+                        dayHours = parseInt(parts[0]) || 0;
+                        nightHours = parseInt(parts[1]) || 0;
+                    } else {
+                        // Дневная смена: "8"
+                        dayHours = parseInt(token) || 0;
+                    }
+                    
+                    if (!isNaN(dayHours) && !isNaN(nightHours)) {
+                        const dayKey = `day-${currentYear}-${currentMonth}-${dayCounter}-${empIndex}`;
+                        const nightKey = `night-${currentYear}-${currentMonth}-${dayCounter}-${empIndex}`;
+                        
+                        if (dayHours > 0) {
+                            currentData[dayKey] = dayHours;
+                        } else {
+                            delete currentData[dayKey];
+                        }
+                        
+                        if (nightHours > 0) {
+                            currentData[nightKey] = nightHours;
+                        } else {
+                            delete currentData[nightKey];
+                        }
+                    }
+                    dayCounter++;
+                }
+            });
+        }
+
+        // Открытие модального окна быстрого ввода
+        function openQuickInputModal(empIndex) {
+            currentEmployeeIndex = empIndex;
+            const modal = document.getElementById('quickInputModal');
+            const employeeName = document.getElementById('modalEmployeeName');
+            
+            employeeName.textContent = `Быстрый ввод: ${employees[empIndex].name}`;
+            document.getElementById('firstHalfInput').value = '';
+            document.getElementById('secondHalfInput').value = '';
+            
+            modal.style.display = 'block';
+        }
+
+        // Закрытие модального окна
+        function closeQuickInputModal() {
+            document.getElementById('quickInputModal').style.display = 'none';
+            currentEmployeeIndex = null;
+        }
+
+        // Применение быстрого ввода
+        function applyQuickInput() {
+            if (currentEmployeeIndex === null) return;
+            
+            const firstHalfInput = document.getElementById('firstHalfInput').value;
+            const secondHalfInput = document.getElementById('secondHalfInput').value;
+            
+            if (firstHalfInput.trim()) {
+                parseQuickInput(firstHalfInput, 1, currentEmployeeIndex);
+            }
+            
+            if (secondHalfInput.trim()) {
+                parseQuickInput(secondHalfInput, 16, currentEmployeeIndex);
+            }
+            
+            generateCalendar();
+            updateTotals();
+            autoSave();
+            closeQuickInputModal();
+        }
+
+        // Загрузка данных с сервера
+        // 🔥 НОВАЯ ФУНКЦИЯ ЗАГРУЗКИ ИЗ FIREBASE:
+async function loadDataFromServer() {
+    try {
+        showSyncStatus('🔄 Загрузка данных...', 'syncing');
+        
+        // Пробуем загрузить из Firebase
+        const docRef = db.collection('timesheets').doc(`${currentYear}-${currentMonth}`);
+        const doc = await docRef.get();
+        
+        if (doc.exists) {
+            currentData = doc.data();
+            isOnline = true;
+            console.log("Данные загружены из Firebase");
+            showSyncStatus('✅ Данные загружены', '');
+        } else {
+            currentData = {};
+            isOnline = true;
+            console.log("Нет данных в Firebase, создаем новые");
+            showSyncStatus('✅ Готов к работе', '');
+        }
+        
+        setTimeout(() => hideSyncStatus(), 2000);
+        
+    } catch (error) {
+        console.error('Ошибка загрузки из Firebase:', error);
+        // Fallback to localStorage
+        const localData = localStorage.getItem(`timesheet-${currentYear}-${currentMonth}`);
+        if (localData) {
+            currentData = JSON.parse(localData);
+        } else {
+            currentData = {};
+        }
+        isOnline = false;
+        showSyncStatus('⚠️ Оффлайн режим', 'error');
+        setTimeout(() => hideSyncStatus(), 3000);
+    }
+}
+
+// 🔥 НОВАЯ ФУНКЦИЯ СОХРАНЕНИЯ В FIREBASE:
+async function saveDataToServer() {
+    try {
+        showSyncStatus('🔄 Сохранение...', 'syncing');
+        
+        // Сохраняем в Firebase
+        await db.collection('timesheets').doc(`${currentYear}-${currentMonth}`).set(currentData);
+        
+        // Также сохраняем в localStorage для оффлайн-работы
+        localStorage.setItem(`timesheet-${currentYear}-${currentMonth}`, JSON.stringify(currentData));
+        
+        isOnline = true;
+        console.log("Данные сохранены в Firebase");
+        showSyncStatus('✅ Данные сохранены', '');
+        setTimeout(() => hideSyncStatus(), 2000);
+        return true;
+        
+    } catch (error) {
+        console.error('Ошибка сохранения в Firebase:', error);
+        // Fallback to localStorage
+        try {
+            localStorage.setItem(`timesheet-${currentYear}-${currentMonth}`, JSON.stringify(currentData));
+            isOnline = false;
+            showSyncStatus('⚠️ Сохранено локально', 'error');
+            setTimeout(() => hideSyncStatus(), 3000);
+            return true;
+        } catch (localError) {
+            console.error('Ошибка локального сохранения:', localError);
+            showSyncStatus('❌ Ошибка сохранения', 'error');
+            setTimeout(() => hideSyncStatus(), 3000);
+            return false;
+        }
+    }
+}
+
+// 🔥 ДОБАВЬТЕ ЭТУ ФУНКЦИЮ ДЛЯ СКРЫТИЯ СТАТУСА:
+function hideSyncStatus() {
+    document.getElementById('syncStatus').style.display = 'none';
+}
+
+        // Генерация календаря
+        function generateCalendar() {
+            const table = document.getElementById('timesheet');
+            const thead = table.querySelector('thead tr');
+            const tbody = table.querySelector('tbody');
+            
+            // Очистка таблицы
+            thead.innerHTML = '<th>Сотрудник / День</th>';
+            tbody.innerHTML = '';
+            
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            // Заголовки дней с днями недели - теперь по 1 столбцу на день
+            for (let day = 1; day <= daysInMonth; day++) {
+                const th = document.createElement('th');
+                const date = new Date(currentYear, currentMonth, day);
+                const weekDay = weekDays[date.getDay()];
+                
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.innerHTML = `
+                    <div class="day-number">${day}</div>
+                    <div class="day-week">${weekDay}</div>
+                `;
+                
+                th.appendChild(dayHeader);
+                thead.appendChild(th);
+            }
+            
+            // Строки сотрудников
+            employees.forEach((employee, empIndex) => {
+                const tr = document.createElement('tr');
+                tr.className = 'person-row';
+                
+                // Ячейка имени с вводом ставки и кнопкой быстрого ввода
+                const nameTd = document.createElement('td');
+                nameTd.className = 'person-name';
+                nameTd.innerHTML = `
+                    <div>${employee.name}</div>
+                    <input type="number" class="rate-input" data-emp-index="${empIndex}" 
+                           value="${employee.rate}" min="0" step="10" placeholder="Ставка">
+                    <div class="quick-input-btn" onclick="openQuickInputModal(${empIndex})" title="Быстрый ввод">
+                        ⚙
+                    </div>
+                `;
+                
+                const rateInput = nameTd.querySelector('.rate-input');
+                rateInput.addEventListener('input', function() {
+                    employee.rate = parseInt(this.value) || 0;
+                    updateTotals();
+                    autoSave();
+                });
+                
+                tr.appendChild(nameTd);
+                
+                // Ячейки дней - теперь по 1 ячейке на день (день и ночь вместе)
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const td = document.createElement('td');
+                    const date = new Date(currentYear, currentMonth, day);
+                    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                    
+                    if (isWeekend) {
+                        td.classList.add('weekend');
+                    }
+                    
+                    const shiftContainer = document.createElement('div');
+                    shiftContainer.className = 'shift-inputs';
+                    
+                    // Дневные часы
+                    const dayInputContainer = document.createElement('div');
+                    dayInputContainer.className = 'day-input';
+                    
+                    const dayInput = document.createElement('input');
+                    dayInput.type = 'number';
+                    dayInput.min = '0';
+                    dayInput.max = '24';
+                    dayInput.step = '1';
+                    dayInput.placeholder = '0';
+                    dayInput.title = 'Дневные часы';
+                    
+                    const dayKey = `day-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+                    dayInput.value = currentData[dayKey] || '';
+                    
+                    dayInput.addEventListener('input', function() {
+                        if (this.value) {
+                            currentData[dayKey] = parseInt(this.value) || 0;
+                            this.value = currentData[dayKey];
+                        } else {
+                            delete currentData[dayKey];
+                        }
+                        updateTotals();
+                        autoSave();
+                    });
+                    
+                    dayInputContainer.appendChild(dayInput);
+                    shiftContainer.appendChild(dayInputContainer);
+                    
+                    // Ночные часы
+                    const nightInputContainer = document.createElement('div');
+                    nightInputContainer.className = 'night-input';
+                    
+                    const nightInput = document.createElement('input');
+                    nightInput.type = 'number';
+                    nightInput.min = '0';
+                    nightInput.max = '24';
+                    nightInput.step = '1';
+                    nightInput.placeholder = '0';
+                    nightInput.title = 'Ночные часы';
+                    
+                    const nightKey = `night-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+                    nightInput.value = currentData[nightKey] || '';
+                    
+                    nightInput.addEventListener('input', function() {
+                        if (this.value) {
+                            currentData[nightKey] = parseInt(this.value) || 0;
+                            this.value = currentData[nightKey];
+                        } else {
+                            delete currentData[nightKey];
+                        }
+                        updateTotals();
+                        autoSave();
+                    });
+                    
+                    nightInputContainer.appendChild(nightInput);
+                    shiftContainer.appendChild(nightInputContainer);
+                    
+                    td.appendChild(shiftContainer);
+                    tr.appendChild(td);
+                }
+                
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Обновление итогов
+        function updateTotals() {
+    const firstPeriodDiv = document.getElementById('firstPeriod');
+    const secondPeriodDiv = document.getElementById('secondPeriod');
+    
+    firstPeriodDiv.innerHTML = '<h3>📅 Первая половина месяца (1-15)</h3>';
+    secondPeriodDiv.innerHTML = '<h3>📅 Вторая половина месяца (16-31)</h3>';
+    
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    employees.forEach((employee, empIndex) => {
+        let firstPeriodDayHours = 0;
+        let firstPeriodNightHours = 0;
+        let firstPeriodDayDays = 0;
+        let firstPeriodNightDays = 0;
+        let secondPeriodDayHours = 0;
+        let secondPeriodNightHours = 0;
+        let secondPeriodDayDays = 0;
+        let secondPeriodNightDays = 0;
+        
+        // Подсчет часов по сменам
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayKey = `day-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+            const nightKey = `night-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+            
+            const dayHours = parseInt(currentData[dayKey]) || 0;
+            const nightHours = parseInt(currentData[nightKey]) || 0;
+            
+            if (day <= 15) {
+                if (dayHours > 0) {
+                    firstPeriodDayHours += dayHours;
+                    firstPeriodDayDays++;
+                }
+                if (nightHours > 0) {
+                    firstPeriodNightHours += nightHours;
+                    firstPeriodNightDays++;
+                }
+            } else {
+                if (dayHours > 0) {
+                    secondPeriodDayHours += dayHours;
+                    secondPeriodDayDays++;
+                }
+                if (nightHours > 0) {
+                    secondPeriodNightHours += nightHours;
+                    secondPeriodNightDays++;
+                }
+            }
+        }
+        
+        const firstPeriodHours = firstPeriodDayHours + firstPeriodNightHours;
+        const secondPeriodHours = secondPeriodDayHours + secondPeriodNightHours;
+        const rate = employee.rate;
+        const firstPeriodSalary = firstPeriodHours * rate;
+        const secondPeriodSalary = secondPeriodHours * rate;
+        
+        // Добавление в первую половину
+        if (firstPeriodHours > 0) {
+            const firstPersonDiv = document.createElement('div');
+            firstPersonDiv.className = 'person-total';
+            firstPersonDiv.innerHTML = `
+                <span>${employee.name}:</span>
+                <span>${firstPeriodHours} ч = ${firstPeriodSalary.toFixed(0)} руб</span>
+            `;
+            firstPeriodDiv.appendChild(firstPersonDiv);
+            
+            // Детали по сменам с днями
+            const dayShiftDiv = document.createElement('div');
+            dayShiftDiv.className = 'shift-total';
+            dayShiftDiv.innerHTML = `
+                <div>День: ${firstPeriodDayDays} дня ${firstPeriodDayHours} часов</div>
+                <div>Ночь: ${firstPeriodNightDays} ночи ${firstPeriodNightHours} часов</div>
+            `;
+            firstPeriodDiv.appendChild(dayShiftDiv);
+            
+            const statsRow = document.createElement('div');
+            statsRow.className = 'person-stats-row';
+            statsRow.innerHTML = `<span>Отработано дней: ${firstPeriodDayDays + firstPeriodNightDays}</span>`;
+            firstPeriodDiv.appendChild(statsRow);
+        }
+        
+        // Добавление во вторую половину
+        if (secondPeriodHours > 0) {
+            const secondPersonDiv = document.createElement('div');
+            secondPersonDiv.className = 'person-total';
+            secondPersonDiv.innerHTML = `
+                <span>${employee.name}:</span>
+                <span>${secondPeriodHours} ч = ${secondPeriodSalary.toFixed(0)} руб</span>
+            `;
+            secondPeriodDiv.appendChild(secondPersonDiv);
+            
+            // Детали по сменам с днями
+            const dayShiftDiv = document.createElement('div');
+            dayShiftDiv.className = 'shift-total';
+            dayShiftDiv.innerHTML = `
+                <div>День: ${secondPeriodDayDays} дня ${secondPeriodDayHours} часов</div>
+                <div>Ночь: ${secondPeriodNightDays} ночи ${secondPeriodNightHours} часов</div>
+            `;
+            secondPeriodDiv.appendChild(dayShiftDiv);
+            
+            const statsRow = document.createElement('div');
+            statsRow.className = 'person-stats-row';
+            statsRow.innerHTML = `<span>Отработано дней: ${secondPeriodDayDays + secondPeriodNightDays}</span>`;
+            secondPeriodDiv.appendChild(statsRow);
+        }
+    });
+    
+    if (firstPeriodDiv.children.length === 1) {
+        firstPeriodDiv.innerHTML += '<div style="text-align: center; opacity: 0.7;">Нет данных</div>';
+    }
+    if (secondPeriodDiv.children.length === 1) {
+        secondPeriodDiv.innerHTML += '<div style="text-align: center; opacity: 0.7;">Нет данных</div>';
+    }
+}
+
+        // Автосохранение
+        function autoSave() {
+            if (autoSaveTimeout) {
+                clearTimeout(autoSaveTimeout);
+            }
+            
+            autoSaveTimeout = setTimeout(async () => {
+                await saveDataToServer();
+                updateTotals();
+            }, 2000);
+        }
+
+        // Сохранение всех данных
+        async function saveAllData() {
+            await saveDataToServer();
+            alert('Все данные сохранены!');
+        }
+
+        // Сброс данных
+        async function resetData() {
+            if (confirm('ВНИМАНИЕ! Вы собираетесь очистить ВСЕ данные за этот месяц. Это действие нельзя отменить.\n\nВы точно хотите очистить данные?')) {
+                currentData = {};
+                await saveDataToServer();
+                generateCalendar();
+                updateTotals();
+                alert('Данные за месяц очищены!');
+            }
+        }
+
+        // Обработчики событий
+        document.getElementById('monthSelect').addEventListener('change', function() {
+            currentMonth = parseInt(this.value);
+            generateCalendar();
+            updateTotals();
+            loadDataFromServer();
+        });
+
+        document.getElementById('yearInput').addEventListener('change', function() {
+            currentYear = parseInt(this.value);
+            generateCalendar();
+            updateTotals();
+            loadDataFromServer();
+        });
+
+        // Закрытие модального окна при клике вне его
+        window.onclick = function(event) {
+            const modal = document.getElementById('quickInputModal');
+            if (event.target === modal) {
+                closeQuickInputModal();
+            }
+        }
+
+        // Запуск при загрузке
+        window.onload = init;
+    </script>
+</body>
+</html>
