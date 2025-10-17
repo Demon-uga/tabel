@@ -1195,17 +1195,17 @@
             firstPeriodDiv.appendChild(firstPersonDiv);
 
             // Детали по сменам с днями
-            const dayShiftDiv = document.createElement("div");
+           const dayShiftDiv = document.createElement("div");
             dayShiftDiv.className = "shift-total";
             dayShiftDiv.innerHTML = `
-                <div>День: ${firstPeriodDayDays} дня ${firstPeriodDayHours} часов</div>
-                <div>Ночь: ${firstPeriodNightDays} ночи ${firstPeriodNightHours} часов</div>
+                <div>День - смены: ${firstPeriodDayDays} часы: ${firstPeriodDayHours}</div>
+                <div>Ночь - смены: ${firstPeriodNightDays} часы: ${firstPeriodNightHours}</div>
             `;
             firstPeriodDiv.appendChild(dayShiftDiv);
 
             const statsRow = document.createElement("div");
             statsRow.className = "person-stats-row";
-            statsRow.innerHTML = `<span>Отработано дней: ${
+            statsRow.innerHTML = `<span>Отработано смен: ${
               firstPeriodDayDays + firstPeriodNightDays
             }</span>`;
             firstPeriodDiv.appendChild(statsRow);
@@ -1227,20 +1227,19 @@
             const dayShiftDiv = document.createElement("div");
             dayShiftDiv.className = "shift-total";
             dayShiftDiv.innerHTML = `
-                <div>День: ${secondPeriodDayDays} дня ${secondPeriodDayHours} часов</div>
-                <div>Ночь: ${secondPeriodNightDays} ночи ${secondPeriodNightHours} часов</div>
+                <div>День - смены: ${secondPeriodDayDays} часы: ${secondPeriodDayHours}</div>
+                <div>Ночь - смены: ${secondPeriodNightDays} часы: ${secondPeriodNightHours}</div>
             `;
             secondPeriodDiv.appendChild(dayShiftDiv);
 
             const statsRow = document.createElement("div");
             statsRow.className = "person-stats-row";
-            statsRow.innerHTML = `<span>Отработано дней: ${
+            statsRow.innerHTML = `<span>Отработано смен: ${
               secondPeriodDayDays + secondPeriodNightDays
             }</span>`;
             secondPeriodDiv.appendChild(statsRow);
           }
         });
-
         if (firstPeriodDiv.children.length === 1) {
           firstPeriodDiv.innerHTML +=
             '<div style="text-align: center; opacity: 0.7;">Нет данных</div>';
@@ -1316,5 +1315,6 @@
     </script>
   </body>
 </html>
+
 
 
