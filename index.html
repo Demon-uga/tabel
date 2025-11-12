@@ -623,6 +623,32 @@
       input[type="number"] {
         -moz-appearance: textfield;
       }
+       /* 🔥 ЦВЕТА ТЕКСТА ДЛЯ ЧАСОВ В ТАБЕЛЕ */
+.day-input input {
+    color: #2403fc !important;       /* Синий текст */
+    font-weight: 600;
+    bg
+}
+
+.night-input input {
+    color: #f57c00 !important;       /* Оранжевый текст */
+    font-weight: 600;
+}
+
+/* 🔥 ОСОБЫЙ СТИЛЬ ДЛЯ НУЛЕЙ */
+.day-input input[value="0"],
+.day-input input:placeholder-shown,
+.night-input input[value="0"], 
+.night-input input:placeholder-shown {
+    color: #bdbdbd !important;       /* Серый текст для нулей */
+    font-weight: normal;
+}
+
+/* 🔥 ФОКУС (КОГДА КЛИКАЕМ) - оставляем стандартный */
+.day-input input:focus,
+.night-input input:focus {
+    color: #000000 !important;          /* Черный текст при фокусе */
+}
     </style>
   </head>
   <body>
@@ -1315,6 +1341,7 @@
     </script>
   </body>
 </html>
+
 
 
 
