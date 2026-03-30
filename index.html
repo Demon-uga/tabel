@@ -750,6 +750,10 @@
             <h3>📅 Вторая половина месяца (16-31)</h3>
             <!-- Итоги будут добавлены через JavaScript -->
           </div>
+          <div class="period" id="totalPeriod">
+            <h3>📊 Общая статистика всех сотрудников</h3>
+            <!-- Сюда будем добавлять итоги через JS -->
+          </div>
         </div>
       </div>
 
@@ -1214,281 +1218,252 @@
 
       // Обновление итогов
       function updateTotals() {
-        const firstPeriodDiv = document.getElementById("firstPeriod");
-        const secondPeriodDiv = document.getElementById("secondPeriod");
+  const firstPeriodDiv = document.getElementById("firstPeriod");
+  const secondPeriodDiv = document.getElementById("secondPeriod");
+  const totalPeriodDiv = document.getElementById("totalPeriod");
 
-        firstPeriodDiv.innerHTML = "<h3>📅 Первая половина месяца (1-15)</h3>";
-        secondPeriodDiv.innerHTML =
-          "<h3>📅 Вторая половина месяца (16-31)</h3>";
+  firstPeriodDiv.innerHTML = "<h3>📅 Первая половина месяца (1-15)</h3>";
+  secondPeriodDiv.innerHTML =
+    "<h3>📅 Вторая половина месяца (16-31)</h3>";
+  totalPeriodDiv.innerHTML =
+    "<h3>📊 Общая статистика за месяц</h3>";
 
-        const daysInMonth = new Date(
-          currentYear,
-          currentMonth + 1,
-          0,
-        ).getDate();
+  const daysInMonth = new Date(
+    currentYear,
+    currentMonth + 1,
+    0
+  ).getDate();
 
-        // Для общей статистики по станциям
-        const stationHours = {
-          day: { Тюленева: 0, Академическая: 0, Планерная: 0 },
-          night: { Тюленева: 0, Академическая: 0, Планерная: 0 },
-        };
+  const stationHours = {
+    day: { Тюленева: 0, Академическая: 0, Планерная: 0 },
+    night: { Тюленева: 0, Академическая: 0, Планерная: 0 },
+    dayShifts: { Тюленева: 0, Академическая: 0, Планерная: 0 },
+    nightShifts: { Тюленева: 0, Академическая: 0, Планерная: 0 },
+  };
 
-        employees.forEach((employee, empIndex) => {
-          let firstPeriodDayHours = 0;
-          let firstPeriodNightHours = 0;
-          let firstPeriodDayDays = 0;
-          let firstPeriodNightDays = 0;
-          let secondPeriodDayHours = 0;
-          let secondPeriodNightHours = 0;
-          let secondPeriodDayDays = 0;
-          let secondPeriodNightDays = 0;
+  function getShiftWord(n) {
+    if (n === 0) return "смен";
+    if (n === 1) return "смена";
+    if (n >= 2 && n <= 4) return "смены";
+    return "смен";
+  }
 
-          // По станциям для каждого сотрудника
-          const empStationHours = {
-            Тюленева: { day: 0, night: 0 },
-            Академическая: { day: 0, night: 0 },
-            Планерная: { day: 0, night: 0 },
-          };
+  employees.forEach((employee, empIndex) => {
+    let firstPeriodDayHours = 0;
+    let firstPeriodNightHours = 0;
+    let firstPeriodDayDays = 0;
+    let firstPeriodNightDays = 0;
+    let secondPeriodDayHours = 0;
+    let secondPeriodNightHours = 0;
+    let secondPeriodDayDays = 0;
+    let secondPeriodNightDays = 0;
 
-          // Подсчет часов по сменам
-          for (let day = 1; day <= daysInMonth; day++) {
-            const dayKey = `day-${currentYear}-${currentMonth}-${day}-${empIndex}`;
-            const nightKey = `night-${currentYear}-${currentMonth}-${day}-${empIndex}`;
-            const stationKey = `station-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+    const firstStationHours = {
+      Тюленева: { day: 0, night: 0, dayShifts: 0, nightShifts: 0 },
+      Академическая: { day: 0, night: 0, dayShifts: 0, nightShifts: 0 },
+      Планерная: { day: 0, night: 0, dayShifts: 0, nightShifts: 0 },
+    };
 
-            const dayHours = parseInt(currentData[dayKey]) || 0;
-            const nightHours = parseInt(currentData[nightKey]) || 0;
-            const station = currentData[stationKey] || "Тюленева";
+    const secondStationHours = {
+      Тюленева: { day: 0, night: 0, dayShifts: 0, nightShifts: 0 },
+      Академическая: { day: 0, night: 0, dayShifts: 0, nightShifts: 0 },
+      Планерная: { day: 0, night: 0, dayShifts: 0, nightShifts: 0 },
+    };
 
-            // Подсчет по сменам
-            if (day <= 15) {
-              if (dayHours > 0) {
-                firstPeriodDayHours += dayHours;
-                firstPeriodDayDays++;
-                empStationHours[station].day += dayHours;
-                stationHours.day[station] += dayHours;
-              }
-              if (nightHours > 0) {
-                firstPeriodNightHours += nightHours;
-                firstPeriodNightDays++;
-                empStationHours[station].night += nightHours;
-                stationHours.night[station] += nightHours;
-              }
-            } else {
-              if (dayHours > 0) {
-                secondPeriodDayHours += dayHours;
-                secondPeriodDayDays++;
-                empStationHours[station].day += dayHours;
-                stationHours.day[station] += dayHours;
-              }
-              if (nightHours > 0) {
-                secondPeriodNightHours += nightHours;
-                secondPeriodNightDays++;
-                empStationHours[station].night += nightHours;
-                stationHours.night[station] += nightHours;
-              }
-            }
-          }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayKey = `day-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+      const nightKey = `night-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+      const stationKey = `station-${currentYear}-${currentMonth}-${day}-${empIndex}`;
 
-          const firstPeriodHours = firstPeriodDayHours + firstPeriodNightHours;
-          const secondPeriodHours =
-            secondPeriodDayHours + secondPeriodNightHours;
-          const rate = employee.rate;
-          const firstPeriodSalary = firstPeriodHours * rate;
-          const secondPeriodSalary = secondPeriodHours * rate;
+      const dayHours = parseInt(currentData[dayKey]) || 0;
+      const nightHours = parseInt(currentData[nightKey]) || 0;
+      const station = currentData[stationKey] || "Тюленева";
 
-          // Добавление в первую половину
-          if (firstPeriodHours > 0) {
-            const firstPersonDiv = document.createElement("div");
-            firstPersonDiv.className = "person-total";
-            firstPersonDiv.innerHTML = `
-                <span>${employee.name}:</span>
-                <span>${firstPeriodHours} ч = ${firstPeriodSalary.toFixed(
-                  0,
-                )} руб</span>
-            `;
-            firstPeriodDiv.appendChild(firstPersonDiv);
+      if (day <= 15) {
+        firstPeriodDayHours += dayHours;
+        firstPeriodNightHours += nightHours;
 
-            // Детали по сменам с днями
-            const dayShiftDiv = document.createElement("div");
-            dayShiftDiv.className = "shift-total";
-            dayShiftDiv.innerHTML = `
-                <div>День - смены: ${firstPeriodDayDays} часы: ${firstPeriodDayHours}</div>
-                <div>Ночь - смены: ${firstPeriodNightDays} часы: ${firstPeriodNightHours}</div>
-            `;
-            firstPeriodDiv.appendChild(dayShiftDiv);
+        if (dayHours > 0) firstPeriodDayDays++;
+        if (nightHours > 0) firstPeriodNightDays++;
 
-            // По станциям (только те, где есть часы)
-            const empActiveStations = stations.filter(
-              (station) =>
-                empStationHours[station].day + empStationHours[station].night >
-                0,
-            );
+        firstStationHours[station].day += dayHours;
+        firstStationHours[station].night += nightHours;
+        if(dayHours>0) firstStationHours[station].dayShifts++;
+        if(nightHours>0) firstStationHours[station].nightShifts++;
+      } else {
+        secondPeriodDayHours += dayHours;
+        secondPeriodNightHours += nightHours;
 
-            if (empActiveStations.length > 0) {
-              const stationDiv = document.createElement("div");
-              stationDiv.className = "shift-total";
-              let stationHTML = "";
-              empActiveStations.forEach((station) => {
-                const totalHours =
-                  empStationHours[station].day + empStationHours[station].night;
-                stationHTML += `<div>${station}: ${totalHours}ч</div>`;
-              });
-              stationDiv.innerHTML = stationHTML;
-              firstPeriodDiv.appendChild(stationDiv);
-            }
+        if (dayHours > 0) secondPeriodDayDays++;
+        if (nightHours > 0) secondPeriodNightDays++;
 
-            const statsRow = document.createElement("div");
-            statsRow.className = "person-stats-row";
-            statsRow.innerHTML = `<span>Отработано смен: ${
-              firstPeriodDayDays + firstPeriodNightDays
-            }</span>`;
-            firstPeriodDiv.appendChild(statsRow);
-          }
-
-          // Добавление во вторую половину
-          if (secondPeriodHours > 0) {
-            const secondPersonDiv = document.createElement("div");
-            secondPersonDiv.className = "person-total";
-            secondPersonDiv.innerHTML = `
-                <span>${employee.name}:</span>
-                <span>${secondPeriodHours} ч = ${secondPeriodSalary.toFixed(
-                  0,
-                )} руб</span>
-            `;
-            secondPeriodDiv.appendChild(secondPersonDiv);
-
-            // Детали по сменам с днями
-            const dayShiftDiv = document.createElement("div");
-            dayShiftDiv.className = "shift-total";
-            dayShiftDiv.innerHTML = `
-                <div>День - смены: ${secondPeriodDayDays} часы: ${secondPeriodDayHours}</div>
-                <div>Ночь - смены: ${secondPeriodNightDays} часы: ${secondPeriodNightHours}</div>
-            `;
-            secondPeriodDiv.appendChild(dayShiftDiv);
-
-            // По станциям (только те, где есть часы)
-            const empActiveStations = stations.filter(
-              (station) =>
-                empStationHours[station].day + empStationHours[station].night >
-                0,
-            );
-
-            if (empActiveStations.length > 0) {
-              const stationDiv = document.createElement("div");
-              stationDiv.className = "shift-total";
-              let stationHTML = "";
-              empActiveStations.forEach((station) => {
-                const totalHours =
-                  empStationHours[station].day + empStationHours[station].night;
-                stationHTML += `<div>${station}: ${totalHours}ч</div>`;
-              });
-              stationDiv.innerHTML = stationHTML;
-              secondPeriodDiv.appendChild(stationDiv);
-            }
-
-            const statsRow = document.createElement("div");
-            statsRow.className = "person-stats-row";
-            statsRow.innerHTML = `<span>Отработано смен: ${
-              secondPeriodDayDays + secondPeriodNightDays
-            }</span>`;
-            secondPeriodDiv.appendChild(statsRow);
-          }
-        });
-
-        // Добавляем итоговую статистику по станциям
-        const totalStationHours = {
-          Тюленева:
-            stationHours.day["Тюленева"] + stationHours.night["Тюленева"],
-          Академическая:
-            stationHours.day["Академическая"] +
-            stationHours.night["Академическая"],
-          Планерная:
-            stationHours.day["Планерная"] + stationHours.night["Планерная"],
-        };
-
-        const totalHours =
-          totalStationHours["Тюленева"] +
-          totalStationHours["Академическая"] +
-          totalStationHours["Планерная"];
-
-        // Подсчет общей суммы денег на отдел
-        let totalMoney = 0;
-        employees.forEach((employee, empIndex) => {
-          const daysInMonth = new Date(
-            currentYear,
-            currentMonth + 1,
-            0,
-          ).getDate();
-
-          for (let day = 1; day <= daysInMonth; day++) {
-            const dayKey = `day-${currentYear}-${currentMonth}-${day}-${empIndex}`;
-            const nightKey = `night-${currentYear}-${currentMonth}-${day}-${empIndex}`;
-
-            const dayHours = parseInt(currentData[dayKey]) || 0;
-            const nightHours = parseInt(currentData[nightKey]) || 0;
-
-            totalMoney += (dayHours + nightHours) * employee.rate;
-          }
-        });
-
-        // Фильтруем станции - показываем только те, на которых есть работы
-        const activeStations = stations.filter(
-          (station) => totalStationHours[station] > 0,
-        );
-
-        // Добавляем общую статистику по станциям в каждую половину только если есть данные
-        if (activeStations.length > 0) {
-          const stationWidget = document.createElement("div");
-          stationWidget.className = "person-total";
-          stationWidget.style.marginTop = "20px";
-          stationWidget.style.borderTop = "2px solid #3498db";
-          stationWidget.style.paddingTop = "12px";
-          stationWidget.innerHTML = `
-              <span style="font-weight: bold; color: #3498db; font-size: 1.1em;">📍 ЧАСЫ ПО СТАНЦИЯМ</span>
-          `;
-          firstPeriodDiv.appendChild(stationWidget);
-
-          const stationDetails = document.createElement("div");
-          stationDetails.className = "shift-total";
-
-          activeStations.forEach((station) => {
-            const stationDiv = document.createElement("div");
-            stationDiv.style.fontWeight = "600";
-            stationDiv.style.color = "#3498db";
-            stationDiv.innerHTML = `${station}: ${totalStationHours[station]}ч (день: ${stationHours.day[station]}ч / ночь: ${stationHours.night[station]}ч)`;
-            stationDetails.appendChild(stationDiv);
-          });
-
-          const totalDiv = document.createElement("div");
-          totalDiv.style.fontWeight = "700";
-          totalDiv.style.color = "#27ae60";
-          totalDiv.style.fontSize = "1.1em";
-          totalDiv.style.marginTop = "8px";
-          totalDiv.style.display = "flex";
-          totalDiv.style.justifyContent = "space-between";
-          totalDiv.style.alignItems = "center";
-          totalDiv.innerHTML = `
-            <span>ВСЕГО ЧАСОВ: ${totalHours}ч</span>
-            <span style="background: #27ae60; color: white; padding: 6px 12px; border-radius: 6px; font-size: 1em;">ВСЕГО ДЕНЕГ: ${totalMoney.toFixed(0)} ₽</span>
-          `;
-          stationDetails.appendChild(totalDiv);
-
-          firstPeriodDiv.appendChild(stationDetails);
-        }
-
-        if (firstPeriodDiv.children.length === 2) {
-          firstPeriodDiv.appendChild(
-            document.createElement("div"),
-          ).textContent = "Нет данных";
-          firstPeriodDiv.lastChild.style.textAlign = "center";
-          firstPeriodDiv.lastChild.style.opacity = "0.7";
-        }
-        if (secondPeriodDiv.children.length === 1) {
-          secondPeriodDiv.innerHTML +=
-            '<div style="text-align: center; opacity: 0.7;">Нет данных</div>';
-        }
+        secondStationHours[station].day += dayHours;
+        secondStationHours[station].night += nightHours;
+        if(dayHours>0) secondStationHours[station].dayShifts++;
+        if(nightHours>0) secondStationHours[station].nightShifts++;
       }
+
+      stationHours.day[station] += dayHours;
+      stationHours.night[station] += nightHours;
+      if(dayHours>0) stationHours.dayShifts[station]++;
+      if(nightHours>0) stationHours.nightShifts[station]++;
+    }
+
+    const firstPeriodHours = firstPeriodDayHours + firstPeriodNightHours;
+    const secondPeriodHours =
+      secondPeriodDayHours + secondPeriodNightHours;
+
+    const firstPeriodSalary = firstPeriodHours * employee.rate;
+    const secondPeriodSalary = secondPeriodHours * employee.rate;
+
+    // =========================
+    // ПЕРВАЯ ПОЛОВИНА
+    // =========================
+    if (firstPeriodHours > 0) {
+      const block = document.createElement("div");
+      block.className = "person-total";
+      block.innerHTML = `
+        <span>${employee.name}:</span>
+        <span>${firstPeriodHours} ч = ${firstPeriodSalary.toFixed(0)} руб</span>
+      `;
+      firstPeriodDiv.appendChild(block);
+
+      stations.forEach((station) => {
+        const st = firstStationHours[station];
+        const total = st.day + st.night;
+
+        if (total > 0) {
+          const stationDiv = document.createElement("div");
+          stationDiv.className = "shift-total";
+          stationDiv.innerHTML = `
+            <div style="margin-top:8px; font-weight:600; color:#3498db;">
+              ${station} ${total}ч:
+            </div>
+            <div>день: ${st.day}ч (${st.dayShifts} ${getShiftWord(st.dayShifts)}) / 
+                 ночь: ${st.night}ч (${st.nightShifts} ${getShiftWord(st.nightShifts)})</div>
+          `;
+          firstPeriodDiv.appendChild(stationDiv);
+        }
+      });
+
+      const statsRow = document.createElement("div");
+      statsRow.className = "person-stats-row";
+      statsRow.style.fontWeight = "700";
+      statsRow.style.marginTop = "6px";
+      statsRow.style.color = "#27ae60";
+      statsRow.innerHTML = `<span>Всего смен: ${
+        firstPeriodDayDays + firstPeriodNightDays
+      }</span>`;
+      firstPeriodDiv.appendChild(statsRow);
+    }
+
+    // =========================
+    // ВТОРАЯ ПОЛОВИНА
+    // =========================
+    if (secondPeriodHours > 0) {
+      const block = document.createElement("div");
+      block.className = "person-total";
+      block.innerHTML = `
+        <span>${employee.name}:</span>
+        <span>${secondPeriodHours} ч = ${secondPeriodSalary.toFixed(0)} руб</span>
+      `;
+      secondPeriodDiv.appendChild(block);
+
+      stations.forEach((station) => {
+        const st = secondStationHours[station];
+        const total = st.day + st.night;
+
+        if (total > 0) {
+          const stationDiv = document.createElement("div");
+          stationDiv.className = "shift-total";
+          stationDiv.innerHTML = `
+            <div style="margin-top:8px; font-weight:600; color:#3498db;">
+              ${station} ${total}ч:
+            </div>
+            <div>день: ${st.day}ч (${st.dayShifts} ${getShiftWord(st.dayShifts)}) / 
+                 ночь: ${st.night}ч (${st.nightShifts} ${getShiftWord(st.nightShifts)})</div>
+          `;
+          secondPeriodDiv.appendChild(stationDiv);
+        }
+      });
+
+      const statsRow = document.createElement("div");
+      statsRow.className = "person-stats-row";
+      statsRow.style.fontWeight = "700";
+      statsRow.style.marginTop = "6px";
+      statsRow.style.color = "#27ae60";
+      statsRow.innerHTML = `<span>Всего смен: ${
+        secondPeriodDayDays + secondPeriodNightDays
+      }</span>`;
+      secondPeriodDiv.appendChild(statsRow);
+    }
+  });
+
+  const totalStationHours = {
+    Тюленева:
+      stationHours.day["Тюленева"] + stationHours.night["Тюленева"],
+    Академическая:
+      stationHours.day["Академическая"] +
+      stationHours.night["Академическая"],
+    Планерная:
+      stationHours.day["Планерная"] + stationHours.night["Планерная"],
+  };
+
+  const totalHours =
+    totalStationHours["Тюленева"] +
+    totalStationHours["Академическая"] +
+    totalStationHours["Планерная"];
+
+  let totalMoney = 0;
+
+  employees.forEach((employee, empIndex) => {
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayKey = `day-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+      const nightKey = `night-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+
+      totalMoney +=
+        (parseInt(currentData[dayKey]) || 0 +
+          (parseInt(currentData[nightKey]) || 0)) *
+        employee.rate;
+    }
+  });
+
+  const activeStations = stations.filter(
+    (station) => totalStationHours[station] > 0
+  );
+
+  if (activeStations.length > 0) {
+    const stationWidget = document.createElement("div");
+    stationWidget.className = "person-total";
+    stationWidget.innerHTML = `
+      <span style="font-weight:bold; color:#3498db; font-size:1.1em;">
+        📍 ЧАСЫ ПО СТАНЦИЯМ
+      </span>
+    `;
+    totalPeriodDiv.appendChild(stationWidget);
+
+    const stationDetails = document.createElement("div");
+    stationDetails.className = "shift-total";
+
+    activeStations.forEach((station) => {
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <span style="color:#3498db; font-weight:600;">${station}</span>: 
+        ${totalStationHours[station]}ч (день: ${stationHours.day[station]}ч / ночь: ${stationHours.night[station]}ч)
+      `;
+      stationDetails.appendChild(div);
+    });
+
+    const totalDiv = document.createElement("div");
+    totalDiv.style.marginTop = "10px";
+    totalDiv.innerHTML = `
+      <b>ВСЕГО ЧАСОВ: ${totalHours}ч</b><br>
+      <b>ВСЕГО ДЕНЕГ: ${totalMoney.toFixed(0)} ₽</b>
+    `;
+    totalPeriodDiv.appendChild(stationDetails);
+    totalPeriodDiv.appendChild(totalDiv);
+  }
+}
 
       // Автосохранение
       function autoSave() {
