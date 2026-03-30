@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
@@ -276,6 +276,14 @@
 
       .shift-inputs {
         display: flex;
+        flex-direction: column;
+        gap: 2px;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .shift-row {
+        display: flex;
         gap: 5px;
         align-items: center;
         justify-content: center;
@@ -414,22 +422,22 @@
       }
 
       .reset-btn {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    opacity: 0.9;
-}
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        opacity: 0.9;
+      }
 
-.reset-btn:hover {
-    opacity: 1;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-}
+      .reset-btn:hover {
+        opacity: 1;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      }
 
       /* Модальное окно */
       .modal {
@@ -572,16 +580,16 @@
         }
 
         .actions {
-        padding: 10px;
-        flex-direction: column; /* Кнопки в столбик на мобильных */
-        align-items: center;
-    }
-    
-    .reset-btn {
-        padding: 8px 15px;
-        font-size: 13px;
-        min-width: 140px;
-    }
+          padding: 10px;
+          flex-direction: column; /* Кнопки в столбик на мобильных */
+          align-items: center;
+        }
+
+        .reset-btn {
+          padding: 8px 15px;
+          font-size: 13px;
+          min-width: 140px;
+        }
 
         input[type="number"] {
           width: 30px;
@@ -623,33 +631,51 @@
       input[type="number"] {
         -moz-appearance: textfield;
       }
-       /* 🔥 ЦВЕТА ТЕКСТА ДЛЯ ЧАСОВ В ТАБЕЛЕ */
-.day-input input {
-    color: #2403fc !important;       /* Синий текст */
-    font-weight: 600;
-    font-size: 14px;
-}
+      /* 🔥 ЦВЕТА ТЕКСТА ДЛЯ ЧАСОВ В ТАБЕЛЕ */
+      .day-input input {
+        color: #2403fc !important; /* Синий текст */
+        font-weight: 600;
+        font-size: 14px;
+      }
 
-.night-input input {
-    color: #f57c00 !important;       /* Оранжевый текст */
-    font-weight: 600;
-  font-size: 14px;
-}
+      .night-input input {
+        color: #f57c00 !important; /* Оранжевый текст */
+        font-weight: 600;
+        font-size: 14px;
+      }
 
-/* 🔥 ОСОБЫЙ СТИЛЬ ДЛЯ НУЛЕЙ */
-.day-input input[value="0"],
-.day-input input:placeholder-shown,
-.night-input input[value="0"], 
-.night-input input:placeholder-shown {
-    color: #bdbdbd !important;       /* Серый текст для нулей */
-    font-weight: normal;
-}
+      .station-select {
+        padding: 4px 2px !important;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 0.7em;
+        cursor: pointer;
+        background: white;
+        min-width: 50px;
+        height: 22px;
+      }
 
-/* 🔥 ФОКУС (КОГДА КЛИКАЕМ) - оставляем стандартный */
-.day-input input:focus,
-.night-input input:focus {
-    color: #000000 !important;          /* Черный текст при фокусе */
-}
+      .station-select:focus {
+        border-color: #3498db;
+        outline: none;
+        box-shadow: 0 0 3px rgba(52, 152, 219, 0.3);
+      }
+
+      /* 🔥 ОСОБЫЙ СТИЛЬ ДЛЯ НУЛЕЙ */
+      .day-input input[value="0"],
+      .day-input input:placeholder-shown,
+      .night-input input[value="0"],
+      .night-input input:placeholder-shown {
+        color: #bdbdbd !important; /* Серый текст для нулей */
+        font-weight: normal;
+      }
+
+      /* 🔥 ФОКУС (КОГДА КЛИКАЕМ) - оставляем стандартный */
+      .day-input input:focus,
+      .night-input input:focus {
+        color: #000000 !important; /* Черный текст при фокусе */
+      }
     </style>
   </head>
   <body>
@@ -732,8 +758,8 @@
           💾 Сохранить все изменения
         </button>
         <button class="reset-btn" onclick="resetData()">
-        ❌ Очистить табель
-      </button>
+          ❌ Очистить табель
+        </button>
       </div>
     </div>
 
@@ -791,12 +817,13 @@
       const employees = [
         { name: "Карасев Игорь", rate: 870 },
         { name: "Беженуца Ян", rate: 790 },
-        { name: "Александров Дмитрий", rate: 800 },
-        { name: "Павел Шаль", rate: 770 },
         { name: "Афанасьев Алексей", rate: 770 },
         { name: "Карасев Андрей", rate: 770 },
         { name: "Селиванов Дмитрий", rate: 715 },
       ];
+
+      // Станции
+      const stations = ["Тюленева", "Академическая", "Планерная"];
 
       let currentData = {};
       let currentMonth, currentYear;
@@ -955,7 +982,7 @@
           console.error("Ошибка загрузки из Firebase:", error);
           // Fallback to localStorage
           const localData = localStorage.getItem(
-            `timesheet-${currentYear}-${currentMonth}`
+            `timesheet-${currentYear}-${currentMonth}`,
           );
           if (localData) {
             currentData = JSON.parse(localData);
@@ -982,7 +1009,7 @@
           // Также сохраняем в localStorage для оффлайн-работы
           localStorage.setItem(
             `timesheet-${currentYear}-${currentMonth}`,
-            JSON.stringify(currentData)
+            JSON.stringify(currentData),
           );
 
           isOnline = true;
@@ -996,7 +1023,7 @@
           try {
             localStorage.setItem(
               `timesheet-${currentYear}-${currentMonth}`,
-              JSON.stringify(currentData)
+              JSON.stringify(currentData),
             );
             isOnline = false;
             showSyncStatus("⚠️ Сохранено локально", "error");
@@ -1023,7 +1050,7 @@
         const daysInMonth = new Date(
           currentYear,
           currentMonth + 1,
-          0
+          0,
         ).getDate();
 
         // Заголовки дней с днями недели - теперь по 1 столбцу на день
@@ -1082,6 +1109,10 @@
             const shiftContainer = document.createElement("div");
             shiftContainer.className = "shift-inputs";
 
+            // Контейнер для часов (день и ночь в один ряд)
+            const hoursRow = document.createElement("div");
+            hoursRow.className = "shift-row";
+
             // Дневные часы
             const dayInputContainer = document.createElement("div");
             dayInputContainer.className = "day-input";
@@ -1109,7 +1140,7 @@
             });
 
             dayInputContainer.appendChild(dayInput);
-            shiftContainer.appendChild(dayInputContainer);
+            hoursRow.appendChild(dayInputContainer);
 
             // Ночные часы
             const nightInputContainer = document.createElement("div");
@@ -1138,8 +1169,41 @@
             });
 
             nightInputContainer.appendChild(nightInput);
-            shiftContainer.appendChild(nightInputContainer);
+            hoursRow.appendChild(nightInputContainer);
 
+            shiftContainer.appendChild(hoursRow);
+
+            // Селектор станции (под часами)
+            const stationSelect = document.createElement("select");
+            stationSelect.className = "station-select";
+            stationSelect.title = "Место работы";
+
+            const emptyOption = document.createElement("option");
+            emptyOption.value = "";
+            emptyOption.textContent = "-";
+            stationSelect.appendChild(emptyOption);
+
+            stations.forEach((station) => {
+              const option = document.createElement("option");
+              option.value = station;
+              option.textContent = station.substring(0, 3);
+              stationSelect.appendChild(option);
+            });
+
+            const stationKey = `station-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+            stationSelect.value = currentData[stationKey] || "";
+
+            stationSelect.addEventListener("change", function () {
+              if (this.value) {
+                currentData[stationKey] = this.value;
+              } else {
+                delete currentData[stationKey];
+              }
+              updateTotals();
+              autoSave();
+            });
+
+            shiftContainer.appendChild(stationSelect);
             td.appendChild(shiftContainer);
             tr.appendChild(td);
           }
@@ -1160,8 +1224,14 @@
         const daysInMonth = new Date(
           currentYear,
           currentMonth + 1,
-          0
+          0,
         ).getDate();
+
+        // Для общей статистики по станциям
+        const stationHours = {
+          day: { Тюленева: 0, Академическая: 0, Планерная: 0 },
+          night: { Тюленева: 0, Академическая: 0, Планерная: 0 },
+        };
 
         employees.forEach((employee, empIndex) => {
           let firstPeriodDayHours = 0;
@@ -1173,31 +1243,49 @@
           let secondPeriodDayDays = 0;
           let secondPeriodNightDays = 0;
 
+          // По станциям для каждого сотрудника
+          const empStationHours = {
+            Тюленева: { day: 0, night: 0 },
+            Академическая: { day: 0, night: 0 },
+            Планерная: { day: 0, night: 0 },
+          };
+
           // Подсчет часов по сменам
           for (let day = 1; day <= daysInMonth; day++) {
             const dayKey = `day-${currentYear}-${currentMonth}-${day}-${empIndex}`;
             const nightKey = `night-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+            const stationKey = `station-${currentYear}-${currentMonth}-${day}-${empIndex}`;
 
             const dayHours = parseInt(currentData[dayKey]) || 0;
             const nightHours = parseInt(currentData[nightKey]) || 0;
+            const station = currentData[stationKey] || "Тюленева";
 
+            // Подсчет по сменам
             if (day <= 15) {
               if (dayHours > 0) {
                 firstPeriodDayHours += dayHours;
                 firstPeriodDayDays++;
+                empStationHours[station].day += dayHours;
+                stationHours.day[station] += dayHours;
               }
               if (nightHours > 0) {
                 firstPeriodNightHours += nightHours;
                 firstPeriodNightDays++;
+                empStationHours[station].night += nightHours;
+                stationHours.night[station] += nightHours;
               }
             } else {
               if (dayHours > 0) {
                 secondPeriodDayHours += dayHours;
                 secondPeriodDayDays++;
+                empStationHours[station].day += dayHours;
+                stationHours.day[station] += dayHours;
               }
               if (nightHours > 0) {
                 secondPeriodNightHours += nightHours;
                 secondPeriodNightDays++;
+                empStationHours[station].night += nightHours;
+                stationHours.night[station] += nightHours;
               }
             }
           }
@@ -1216,19 +1304,39 @@
             firstPersonDiv.innerHTML = `
                 <span>${employee.name}:</span>
                 <span>${firstPeriodHours} ч = ${firstPeriodSalary.toFixed(
-              0
-            )} руб</span>
+                  0,
+                )} руб</span>
             `;
             firstPeriodDiv.appendChild(firstPersonDiv);
 
             // Детали по сменам с днями
-           const dayShiftDiv = document.createElement("div");
+            const dayShiftDiv = document.createElement("div");
             dayShiftDiv.className = "shift-total";
             dayShiftDiv.innerHTML = `
                 <div>День - смены: ${firstPeriodDayDays} часы: ${firstPeriodDayHours}</div>
                 <div>Ночь - смены: ${firstPeriodNightDays} часы: ${firstPeriodNightHours}</div>
             `;
             firstPeriodDiv.appendChild(dayShiftDiv);
+
+            // По станциям (только те, где есть часы)
+            const empActiveStations = stations.filter(
+              (station) =>
+                empStationHours[station].day + empStationHours[station].night >
+                0,
+            );
+
+            if (empActiveStations.length > 0) {
+              const stationDiv = document.createElement("div");
+              stationDiv.className = "shift-total";
+              let stationHTML = "";
+              empActiveStations.forEach((station) => {
+                const totalHours =
+                  empStationHours[station].day + empStationHours[station].night;
+                stationHTML += `<div>${station}: ${totalHours}ч</div>`;
+              });
+              stationDiv.innerHTML = stationHTML;
+              firstPeriodDiv.appendChild(stationDiv);
+            }
 
             const statsRow = document.createElement("div");
             statsRow.className = "person-stats-row";
@@ -1245,8 +1353,8 @@
             secondPersonDiv.innerHTML = `
                 <span>${employee.name}:</span>
                 <span>${secondPeriodHours} ч = ${secondPeriodSalary.toFixed(
-              0
-            )} руб</span>
+                  0,
+                )} руб</span>
             `;
             secondPeriodDiv.appendChild(secondPersonDiv);
 
@@ -1259,6 +1367,26 @@
             `;
             secondPeriodDiv.appendChild(dayShiftDiv);
 
+            // По станциям (только те, где есть часы)
+            const empActiveStations = stations.filter(
+              (station) =>
+                empStationHours[station].day + empStationHours[station].night >
+                0,
+            );
+
+            if (empActiveStations.length > 0) {
+              const stationDiv = document.createElement("div");
+              stationDiv.className = "shift-total";
+              let stationHTML = "";
+              empActiveStations.forEach((station) => {
+                const totalHours =
+                  empStationHours[station].day + empStationHours[station].night;
+                stationHTML += `<div>${station}: ${totalHours}ч</div>`;
+              });
+              stationDiv.innerHTML = stationHTML;
+              secondPeriodDiv.appendChild(stationDiv);
+            }
+
             const statsRow = document.createElement("div");
             statsRow.className = "person-stats-row";
             statsRow.innerHTML = `<span>Отработано смен: ${
@@ -1267,9 +1395,94 @@
             secondPeriodDiv.appendChild(statsRow);
           }
         });
-        if (firstPeriodDiv.children.length === 1) {
-          firstPeriodDiv.innerHTML +=
-            '<div style="text-align: center; opacity: 0.7;">Нет данных</div>';
+
+        // Добавляем итоговую статистику по станциям
+        const totalStationHours = {
+          Тюленева:
+            stationHours.day["Тюленева"] + stationHours.night["Тюленева"],
+          Академическая:
+            stationHours.day["Академическая"] +
+            stationHours.night["Академическая"],
+          Планерная:
+            stationHours.day["Планерная"] + stationHours.night["Планерная"],
+        };
+
+        const totalHours =
+          totalStationHours["Тюленева"] +
+          totalStationHours["Академическая"] +
+          totalStationHours["Планерная"];
+
+        // Подсчет общей суммы денег на отдел
+        let totalMoney = 0;
+        employees.forEach((employee, empIndex) => {
+          const daysInMonth = new Date(
+            currentYear,
+            currentMonth + 1,
+            0,
+          ).getDate();
+
+          for (let day = 1; day <= daysInMonth; day++) {
+            const dayKey = `day-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+            const nightKey = `night-${currentYear}-${currentMonth}-${day}-${empIndex}`;
+
+            const dayHours = parseInt(currentData[dayKey]) || 0;
+            const nightHours = parseInt(currentData[nightKey]) || 0;
+
+            totalMoney += (dayHours + nightHours) * employee.rate;
+          }
+        });
+
+        // Фильтруем станции - показываем только те, на которых есть работы
+        const activeStations = stations.filter(
+          (station) => totalStationHours[station] > 0,
+        );
+
+        // Добавляем общую статистику по станциям в каждую половину только если есть данные
+        if (activeStations.length > 0) {
+          const stationWidget = document.createElement("div");
+          stationWidget.className = "person-total";
+          stationWidget.style.marginTop = "20px";
+          stationWidget.style.borderTop = "2px solid #3498db";
+          stationWidget.style.paddingTop = "12px";
+          stationWidget.innerHTML = `
+              <span style="font-weight: bold; color: #3498db; font-size: 1.1em;">📍 ЧАСЫ ПО СТАНЦИЯМ</span>
+          `;
+          firstPeriodDiv.appendChild(stationWidget);
+
+          const stationDetails = document.createElement("div");
+          stationDetails.className = "shift-total";
+
+          activeStations.forEach((station) => {
+            const stationDiv = document.createElement("div");
+            stationDiv.style.fontWeight = "600";
+            stationDiv.style.color = "#3498db";
+            stationDiv.innerHTML = `${station}: ${totalStationHours[station]}ч (день: ${stationHours.day[station]}ч / ночь: ${stationHours.night[station]}ч)`;
+            stationDetails.appendChild(stationDiv);
+          });
+
+          const totalDiv = document.createElement("div");
+          totalDiv.style.fontWeight = "700";
+          totalDiv.style.color = "#27ae60";
+          totalDiv.style.fontSize = "1.1em";
+          totalDiv.style.marginTop = "8px";
+          totalDiv.style.display = "flex";
+          totalDiv.style.justifyContent = "space-between";
+          totalDiv.style.alignItems = "center";
+          totalDiv.innerHTML = `
+            <span>ВСЕГО ЧАСОВ: ${totalHours}ч</span>
+            <span style="background: #27ae60; color: white; padding: 6px 12px; border-radius: 6px; font-size: 1em;">ВСЕГО ДЕНЕГ: ${totalMoney.toFixed(0)} ₽</span>
+          `;
+          stationDetails.appendChild(totalDiv);
+
+          firstPeriodDiv.appendChild(stationDetails);
+        }
+
+        if (firstPeriodDiv.children.length === 2) {
+          firstPeriodDiv.appendChild(
+            document.createElement("div"),
+          ).textContent = "Нет данных";
+          firstPeriodDiv.lastChild.style.textAlign = "center";
+          firstPeriodDiv.lastChild.style.opacity = "0.7";
         }
         if (secondPeriodDiv.children.length === 1) {
           secondPeriodDiv.innerHTML +=
@@ -1299,7 +1512,7 @@
       async function resetData() {
         if (
           confirm(
-            "ВНИМАНИЕ! Вы собираетесь очистить ВСЕ данные за этот месяц. Это действие нельзя отменить.\n\nВы точно хотите очистить данные?"
+            "ВНИМАНИЕ! Вы собираетесь очистить ВСЕ данные за этот месяц. Это действие нельзя отменить.\n\nВы точно хотите очистить данные?",
           )
         ) {
           currentData = {};
@@ -1342,9 +1555,3 @@
     </script>
   </body>
 </html>
-
-
-
-
-
-
