@@ -1597,8 +1597,9 @@
             const nightKey = `night-${currentYear}-${currentMonth}-${day}-${empIndex}`;
 
             totalMoney +=
-              (parseInt(currentData[dayKey]) || 0) +
-              (parseInt(currentData[nightKey]) || 0) * employee.rate;
+              ((parseInt(currentData[dayKey]) || 0) +
+                (parseInt(currentData[nightKey]) || 0)) *
+              employee.rate;
           }
         });
 
@@ -1675,20 +1676,24 @@
       // Обработчики событий
       document
         .getElementById("monthSelect")
-        .addEventListener("change", function () {
+        .addEventListener("change", async function () {
+          // Сохраняем текущие данные перед переходом
+          await saveDataToServer();
           currentMonth = parseInt(this.value);
+          await loadDataFromServer();
           generateCalendar();
           updateTotals();
-          loadDataFromServer();
         });
 
       document
         .getElementById("yearInput")
-        .addEventListener("change", function () {
+        .addEventListener("change", async function () {
+          // Сохраняем текущие данные перед переходом
+          await saveDataToServer();
           currentYear = parseInt(this.value);
+          await loadDataFromServer();
           generateCalendar();
           updateTotals();
-          loadDataFromServer();
         });
 
       // Закрытие модального окна при клике вне его
